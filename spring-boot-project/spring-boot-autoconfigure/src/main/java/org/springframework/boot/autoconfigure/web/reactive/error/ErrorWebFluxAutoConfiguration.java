@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import org.springframework.web.reactive.result.view.ViewResolver;
  * {@link org.springframework.web.server.WebExceptionHandler}.
  *
  * @author Brian Clozel
+ * @author Scott Frederick
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
@@ -63,16 +64,12 @@ public class ErrorWebFluxAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(value = ErrorWebExceptionHandler.class, search = SearchStrategy.CURRENT)
 	@Order(-1)
-	public ErrorWebExceptionHandler errorWebExceptionHandler(
-			ErrorAttributes errorAttributes, ResourceProperties resourceProperties,
-			ObjectProvider<ViewResolver> viewResolvers,
-			ServerCodecConfigurer serverCodecConfigurer,
-			ApplicationContext applicationContext) {
-		DefaultErrorWebExceptionHandler exceptionHandler = new DefaultErrorWebExceptionHandler(
-				errorAttributes, resourceProperties, this.serverProperties.getError(),
-				applicationContext);
-		exceptionHandler.setViewResolvers(
-				viewResolvers.orderedStream().collect(Collectors.toList()));
+	public ErrorWebExceptionHandler errorWebExceptionHandler(ErrorAttributes errorAttributes,
+			ResourceProperties resourceProperties, ObjectProvider<ViewResolver> viewResolvers,
+			ServerCodecConfigurer serverCodecConfigurer, ApplicationContext applicationContext) {
+		DefaultErrorWebExceptionHandler exceptionHandler = new DefaultErrorWebExceptionHandler(errorAttributes,
+				resourceProperties, this.serverProperties.getError(), applicationContext);
+		exceptionHandler.setViewResolvers(viewResolvers.orderedStream().collect(Collectors.toList()));
 		exceptionHandler.setMessageWriters(serverCodecConfigurer.getWriters());
 		exceptionHandler.setMessageReaders(serverCodecConfigurer.getReaders());
 		return exceptionHandler;
@@ -81,8 +78,7 @@ public class ErrorWebFluxAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean(value = ErrorAttributes.class, search = SearchStrategy.CURRENT)
 	public DefaultErrorAttributes errorAttributes() {
-		return new DefaultErrorAttributes(
-				this.serverProperties.getError().isIncludeException());
+		return new DefaultErrorAttributes();
 	}
 
 }

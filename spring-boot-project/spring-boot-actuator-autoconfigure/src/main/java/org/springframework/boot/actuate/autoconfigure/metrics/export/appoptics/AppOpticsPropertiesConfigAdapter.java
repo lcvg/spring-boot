@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,16 @@ import org.springframework.boot.actuate.autoconfigure.metrics.export.properties.
  *
  * @author Stephane Nicoll
  */
-class AppOpticsPropertiesConfigAdapter
-		extends StepRegistryPropertiesConfigAdapter<AppOpticsProperties>
+class AppOpticsPropertiesConfigAdapter extends StepRegistryPropertiesConfigAdapter<AppOpticsProperties>
 		implements AppOpticsConfig {
 
 	AppOpticsPropertiesConfigAdapter(AppOpticsProperties properties) {
 		super(properties);
+	}
+
+	@Override
+	public String prefix() {
+		return "management.metrics.export.appoptics";
 	}
 
 	@Override
@@ -46,6 +50,11 @@ class AppOpticsPropertiesConfigAdapter
 	@Override
 	public String hostTag() {
 		return get(AppOpticsProperties::getHostTag, AppOpticsConfig.super::hostTag);
+	}
+
+	@Override
+	public boolean floorTimes() {
+		return get(AppOpticsProperties::isFloorTimes, AppOpticsConfig.super::floorTimes);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.exception.CypherException;
 import org.neo4j.ogm.model.Result;
 import org.neo4j.ogm.session.Session;
@@ -44,14 +43,14 @@ import static org.mockito.Mockito.mock;
  * @author Stephane Nicoll
  * @author Michael Simons
  */
-public class Neo4jHealthIndicatorTests {
+class Neo4jHealthIndicatorTests {
 
 	private Session session;
 
 	private Neo4jHealthIndicator neo4jHealthIndicator;
 
-	@Before
-	public void before() {
+	@BeforeEach
+	void before() {
 		this.session = mock(Session.class);
 		SessionFactory sessionFactory = mock(SessionFactory.class);
 		given(sessionFactory.openSession()).willReturn(this.session);
@@ -59,29 +58,31 @@ public class Neo4jHealthIndicatorTests {
 	}
 
 	@Test
-	public void neo4jUp() {
+	void neo4jUp() {
 		Result result = mock(Result.class);
-		given(this.session.query(Neo4jHealthIndicator.CYPHER, Collections.emptyMap()))
-				.willReturn(result);
-		int nodeCount = 500;
+		given(this.session.query(Neo4jHealthIndicator.CYPHER, Collections.emptyMap())).willReturn(result);
 		Map<String, Object> expectedCypherDetails = new HashMap<>();
-		expectedCypherDetails.put("nodes", nodeCount);
+		String edition = "community";
+		String version = "4.0.0";
+		expectedCypherDetails.put("edition", edition);
+		expectedCypherDetails.put("version", version);
 		List<Map<String, Object>> queryResults = new ArrayList<>();
 		queryResults.add(expectedCypherDetails);
 		given(result.queryResults()).willReturn(queryResults);
 		Health health = this.neo4jHealthIndicator.health();
 		assertThat(health.getStatus()).isEqualTo(Status.UP);
 		Map<String, Object> details = health.getDetails();
-		int nodeCountFromDetails = (int) details.get("nodes");
-		Assert.assertEquals(nodeCount, nodeCountFromDetails);
+		String editionFromDetails = details.get("edition").toString();
+		String versionFromDetails = details.get("version").toString();
+		assertThat(editionFromDetails).isEqualTo(edition);
+		assertThat(versionFromDetails).isEqualTo(version);
 	}
 
 	@Test
-	public void neo4jDown() {
-		CypherException cypherException = new CypherException(
-				"Neo.ClientError.Statement.SyntaxError", "Error executing Cypher");
-		given(this.session.query(Neo4jHealthIndicator.CYPHER, Collections.emptyMap()))
-				.willThrow(cypherException);
+	void neo4jDown() {
+		CypherException cypherException = new CypherException("Neo.ClientError.Statement.SyntaxError",
+				"Error executing Cypher");
+		given(this.session.query(Neo4jHealthIndicator.CYPHER, Collections.emptyMap())).willThrow(cypherException);
 		Health health = this.neo4jHealthIndicator.health();
 		assertThat(health.getStatus()).isEqualTo(Status.DOWN);
 	}
